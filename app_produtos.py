@@ -1,7 +1,8 @@
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from models import Produto
+from app_categorias import selecionar_categoria
+from models import Produto, Categoria
 
 
 # id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -17,14 +18,30 @@ def listar(engine: Engine):
         registros = session.execute(sentence).scalars()
         print("id, nome, categoria, preco, estoque, ativo")
         for produto in registros:
-            print(f"{produto.id}, {produto.nome}, {produto.categoria.nome}, {produto.preco}, {produto.estoque}")
+            print(f"{produto.id}, {produto.nome}, {produto.categoria.nome}, {produto.preco}, {produto.estoque}, {"Ativo" if produto.ativo else "Inativo"}")
+
+
 
 def adicionar(engine: Engine):
     with Session(engine) as session:
         nome = input("Nome: ")
-        categoria = Categoria()
-        categoria.nome = nome
-        session.add(categoria)
+        preco = input("Preco: ")
+        estoque = input("Estoque: ")
+        ativo = input("Ativo: (S/N) ").lower()
+        ativo = True if ativo == "s" else False
+
+
+        categoria = selecionar_categoria(session)
+
+        produto = Produto()
+        produto.categoria = categoria
+        produto.nome = nome
+        produto.preco = preco
+        produto.estoque = estoque
+        produto.ativo = ativo
+
+        session.add(produto)
+
         try:
             session.commit()
         except:
@@ -33,25 +50,39 @@ def adicionar(engine: Engine):
             print("Adicionado com sucesso")
 
 
+
+
+
 def modificar(engine):
     with Session(engine) as session:
-        sentenca = select(Categoria).order_by(Categoria.nome)
-        categorias = session.execute(sentenca).scalars()
+        sentenca = select(Produto).order_by(Produto.nome)
+        produtos = session.execute(sentenca).scalars()
         dicionario = dict()
         contador = 1
-        for categoria in categorias:
-            print(f"{contador} - {categoria.nome}")
-            dicionario[contador] = categoria.id
+        for produto in produtos:
+            print(f"{contador} - {produto.nome}")
+            dicionario[contador] = produto.id
             contador += 1
 
-        id = int(input("Digite o ID do categoria: "))
+        id = int(input("Digite o ID do produto: "))
 
-        categoria = session.get_one(Categoria, dicionario[id])
+        produto = session.get_one(Produto, dicionario[id])
 
-        # if categoria is None:
+        # if produto is None:
 
-        nome = input("Novo nome: ")
-        categoria.nome = nome
+        nome = input("Nome: ")
+        preco = input("Preco: ")
+        estoque = input("Estoque: ")
+        ativo = input("Ativo: (S/N) ").lower()
+        ativo = True if ativo == "s" else False
+
+        categoria = selecionar_categoria(session)
+
+        produto.categoria = categoria
+        produto.nome = nome
+        produto.preco = preco
+        produto.estoque = estoque
+        produto.ativo = ativo
 
         try:
             session.commit()
@@ -63,20 +94,20 @@ def modificar(engine):
 
 def deletar(engine):
     with Session(engine) as session:
-        sentenca = select(Categoria).order_by(Categoria.nome)
-        categorias = session.execute(sentenca).scalars()
+        sentenca = select(Produto).order_by(Produto.nome)
+        produtos = session.execute(sentenca).scalars()
         dicionario = dict()
         contador = 1
-        for categoria in categorias:
-            print(f"{contador} - {categoria.nome}")
-            dicionario[contador] = categoria.id
+        for produto in produtos:
+            print(f"{contador} - {produto.nome}")
+            dicionario[contador] = produto.id
             contador += 1
 
-        id = int(input("Digite o ID do categoria que será excluída: "))
+        id = int(input("Digite o ID do produto que será excluído: "))
 
-        categoria = session.get_one(Categoria, dicionario[id])
+        produto = session.get_one(Produto, dicionario[id])
 
-        session.delete(categoria)
+        session.delete(produto)
 
         try:
             session.commit()

@@ -12,6 +12,22 @@ def listar(engine: Engine):
         for categoria in registros:
             print(f"{categoria.id}, {categoria.nome}, {len(categoria.lista_de_produtos)}, {categoria.dta_cadastro}, {categoria.dta_atualizacao}")
 
+def selecionar_categoria(session: Session) -> Categoria:
+    sentenca = select(Categoria).order_by(Categoria.nome)
+    categorias = session.execute(sentenca).scalars()
+    dicionario = dict()
+    contador = 1
+    for categoria in categorias:
+        print(f"{contador} - {categoria.nome}")
+        dicionario[contador] = categoria.id
+        contador += 1
+
+    id = int(input("Digite o ID do categoria: "))
+
+    categoria = session.get_one(Categoria, dicionario[id])
+
+    return categoria
+
 def adicionar(engine: Engine):
     with Session(engine) as session:
         nome = input("Nome: ")
@@ -28,18 +44,8 @@ def adicionar(engine: Engine):
 
 def modificar(engine):
     with Session(engine) as session:
-        sentenca = select(Categoria).order_by(Categoria.nome)
-        categorias = session.execute(sentenca).scalars()
-        dicionario = dict()
-        contador = 1
-        for categoria in categorias:
-            print(f"{contador} - {categoria.nome}")
-            dicionario[contador] = categoria.id
-            contador += 1
 
-        id = int(input("Digite o ID do categoria: "))
-
-        categoria = session.get_one(Categoria, dicionario[id])
+        categoria = selecionar_categoria(session)
 
         # if categoria is None:
 
@@ -56,18 +62,7 @@ def modificar(engine):
 
 def deletar(engine):
     with Session(engine) as session:
-        sentenca = select(Categoria).order_by(Categoria.nome)
-        categorias = session.execute(sentenca).scalars()
-        dicionario = dict()
-        contador = 1
-        for categoria in categorias:
-            print(f"{contador} - {categoria.nome}")
-            dicionario[contador] = categoria.id
-            contador += 1
-
-        id = int(input("Digite o ID do categoria que será excluída: "))
-
-        categoria = session.get_one(Categoria, dicionario[id])
+        categoria = selecionar_categoria(session)
 
         session.delete(categoria)
 
